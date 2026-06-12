@@ -1,0 +1,224 @@
+/* ======================================================
+ * CUP Specification - RPG NPC Dialog Grammar (Contexto 4)
+ * APE 10: Implementación del Motor de Derivación CFG
+ *
+ * Gramática G = (V, Σ, P, S) donde:
+ *   V = { Dialogo, ListaSentencias, Sentencia, Condicion,
+ *         Consecuencia, ListaAcciones, Accion }
+ *   Σ = { SAY, IF, THEN, ELSE, GIVE, AND, PLAYER_HAS,
+ *         STRING_LITERAL, ; }
+ *   S = Dialogo
+ *   P = { P1..P12 }
+ * ====================================================== */
+
+package com.ape10.cfg.parser;
+
+import java_cup.runtime.*;
+import com.ape10.cfg.model.TreeNode;
+import java.util.ArrayList;
+import java.util.List;
+
+/* ---- Parser code ---- */
+parser code {:
+    private List<String> errors = new ArrayList<>();
+    private List<String> derivationSteps = new ArrayList<>();
+    private int nodeCounter = 0;
+
+    public List<String> getErrors() { return errors; }
+    public List<String> getDerivationSteps() { return derivationSteps; }
+
+    private String nextId() {
+        return "n" + (nodeCounter++);
+    }
+
+    public void syntax_error(Symbol cur_token) {
+        String msg = "Error sintáctico: token inesperado '" + cur_token.value
+            + "' en línea " + cur_token.left + ", columna " + cur_token.right;
+        errors.add(msg);
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+        String msg = "Error sintáctico irrecuperable: token '" + cur_token.value
+            + "' en línea " + cur_token.left + ", columna " + cur_token.right;
+        errors.add(msg);
+        throw new Exception(msg);
+    }
+:};
+
+action code {:
+    private int nodeCounter = 0;
+
+    private String nextId() {
+        return "n" + (nodeCounter++);
+    }
+
+    private void addStep(String step) {
+        parser.getDerivationSteps().add(step);
+    }
+:};
+
+/* ---- Terminals (Σ) ---- */
+terminal String SAY, IF, THEN, ELSE, GIVE, AND, PLAYER_HAS, SEMICOLON, STRING_LITERAL;
+
+/* ---- Non-Terminals (V) ---- */
+non terminal TreeNode Dialogo, ListaSentencias, Sentencia, Condicion, Consecuencia, ListaAcciones, Accion;
+
+/* ---- Start Symbol (S) ---- */
+start with Dialogo;
+
+/* ============================
+ * Productions (P)
+ * ============================ */
+
+/* P1: Diálogo → ListaSentencias */
+Dialogo ::= ListaSentencias:ls
+    {:
+        addStep("P1: Diálogo → ListaSentencias");
+        TreeNode node = new TreeNode(nextId(), "Diálogo", "nonterminal");
+        node.setProductionId("P1");
+        node.addChild(ls);
+        RESULT = node;
+    :}
+    ;
+
+/* P2: ListaSentencias → Sentencia ; */
+ListaSentencias ::= Sentencia:s SEMICOLON:sc
+    {:
+        addStep("P2: ListaSentencias → Sentencia ;");
+        TreeNode node = new TreeNode(nextId(), "ListaSentencias", "nonterminal");
+        node.setProductionId("P2");
+        node.addChild(s);
+        TreeNode semicolonNode = new TreeNode(nextId(), ";", sc, "terminal");
+        node.addChild(semicolonNode);
+        RESULT = node;
+    :}
+    /* P3: ListaSentencias → Sentencia ; ListaSentencias */
+    | Sentencia:s SEMICOLON:sc ListaSentencias:ls
+    {:
+        addStep("P3: ListaSentencias → Sentencia ; ListaSentencias");
+        TreeNode node = new TreeNode(nextId(), "ListaSentencias", "nonterminal");
+        node.setProductionId("P3");
+        node.addChild(s);
+        TreeNode semicolonNode = new TreeNode(nextId(), ";", sc, "terminal");
+        node.addChild(semicolonNode);
+        node.addChild(ls);
+        RESULT = node;
+    :}
+    ;
+
+/* P4: Sentencia → SAY STRING_LITERAL */
+Sentencia ::= SAY:k STRING_LITERAL:str
+    {:
+        addStep("P4: Sentencia → SAY STRING_LITERAL");
+        TreeNode node = new TreeNode(nextId(), "Sentencia", "nonterminal");
+        node.setProductionId("P4");
+        TreeNode sayNode = new TreeNode(nextId(), "SAY", k, "terminal");
+        TreeNode strNode = new TreeNode(nextId(), "STRING_LITERAL", str, "terminal");
+        node.addChild(sayNode);
+        node.addChild(strNode);
+        RESULT = node;
+    :}
+    /* P5: Sentencia → GIVE STRING_LITERAL */
+    | GIVE:k STRING_LITERAL:str
+    {:
+        addStep("P5: Sentencia → GIVE STRING_LITERAL");
+        TreeNode node = new TreeNode(nextId(), "Sentencia", "nonterminal");
+        node.setProductionId("P5");
+        TreeNode giveNode = new TreeNode(nextId(), "GIVE", k, "terminal");
+        TreeNode strNode = new TreeNode(nextId(), "STRING_LITERAL", str, "terminal");
+        node.addChild(giveNode);
+        node.addChild(strNode);
+        RESULT = node;
+    :}
+    /* P6: Sentencia → IF Condicion THEN Consecuencia ELSE ListaAcciones */
+    | IF:kif Condicion:cond THEN:kthen Consecuencia:cons ELSE:kelse ListaAcciones:la
+    {:
+        addStep("P6: Sentencia → IF Condición THEN Consecuencia ELSE ListaAcciones");
+        TreeNode node = new TreeNode(nextId(), "Sentencia", "nonterminal");
+        node.setProductionId("P6");
+        TreeNode ifNode = new TreeNode(nextId(), "IF", kif, "terminal");
+        TreeNode thenNode = new TreeNode(nextId(), "THEN", kthen, "terminal");
+        TreeNode elseNode = new TreeNode(nextId(), "ELSE", kelse, "terminal");
+        node.addChild(ifNode);
+        node.addChild(cond);
+        node.addChild(thenNode);
+        node.addChild(cons);
+        node.addChild(elseNode);
+        node.addChild(la);
+        RESULT = node;
+    :}
+    ;
+
+/* P7: Condición → PLAYER_HAS STRING_LITERAL */
+Condicion ::= PLAYER_HAS:k STRING_LITERAL:str
+    {:
+        addStep("P7: Condición → PLAYER_HAS STRING_LITERAL");
+        TreeNode node = new TreeNode(nextId(), "Condición", "nonterminal");
+        node.setProductionId("P7");
+        TreeNode phNode = new TreeNode(nextId(), "PLAYER_HAS", k, "terminal");
+        TreeNode strNode = new TreeNode(nextId(), "STRING_LITERAL", str, "terminal");
+        node.addChild(phNode);
+        node.addChild(strNode);
+        RESULT = node;
+    :}
+    ;
+
+/* P8: Consecuencia → Accion */
+Consecuencia ::= Accion:a
+    {:
+        addStep("P8: Consecuencia → Acción");
+        TreeNode node = new TreeNode(nextId(), "Consecuencia", "nonterminal");
+        node.setProductionId("P8");
+        node.addChild(a);
+        RESULT = node;
+    :}
+    ;
+
+/* P9: ListaAcciones → Accion */
+ListaAcciones ::= Accion:a
+    {:
+        addStep("P9: ListaAcciones → Acción");
+        TreeNode node = new TreeNode(nextId(), "ListaAcciones", "nonterminal");
+        node.setProductionId("P9");
+        node.addChild(a);
+        RESULT = node;
+    :}
+    /* P10: ListaAcciones → Accion AND ListaAcciones */
+    | Accion:a AND:k ListaAcciones:la
+    {:
+        addStep("P10: ListaAcciones → Acción AND ListaAcciones");
+        TreeNode node = new TreeNode(nextId(), "ListaAcciones", "nonterminal");
+        node.setProductionId("P10");
+        node.addChild(a);
+        TreeNode andNode = new TreeNode(nextId(), "AND", k, "terminal");
+        node.addChild(andNode);
+        node.addChild(la);
+        RESULT = node;
+    :}
+    ;
+
+/* P11: Accion → SAY STRING_LITERAL */
+Accion ::= SAY:k STRING_LITERAL:str
+    {:
+        addStep("P11: Acción → SAY STRING_LITERAL");
+        TreeNode node = new TreeNode(nextId(), "Acción", "nonterminal");
+        node.setProductionId("P11");
+        TreeNode sayNode = new TreeNode(nextId(), "SAY", k, "terminal");
+        TreeNode strNode = new TreeNode(nextId(), "STRING_LITERAL", str, "terminal");
+        node.addChild(sayNode);
+        node.addChild(strNode);
+        RESULT = node;
+    :}
+    /* P12: Accion → GIVE STRING_LITERAL */
+    | GIVE:k STRING_LITERAL:str
+    {:
+        addStep("P12: Acción → GIVE STRING_LITERAL");
+        TreeNode node = new TreeNode(nextId(), "Acción", "nonterminal");
+        node.setProductionId("P12");
+        TreeNode giveNode = new TreeNode(nextId(), "GIVE", k, "terminal");
+        TreeNode strNode = new TreeNode(nextId(), "STRING_LITERAL", str, "terminal");
+        node.addChild(giveNode);
+        node.addChild(strNode);
+        RESULT = node;
+    :}
+    ;

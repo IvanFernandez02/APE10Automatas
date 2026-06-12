@@ -1,0 +1,11 @@
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/Ape10Application.java
+/home/ivan/Escritorio/APE 10/backend/target/generated-sources/jflex/com/ape10/cfg/lexer/RpgLexer.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/controller/ParserController.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/config/WebConfig.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/service/ParserService.java
+/home/ivan/Escritorio/APE 10/backend/target/generated-sources/cup/com/ape10/cfg/parser/CfgParser.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/model/GrammarInfo.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/model/TokenInfo.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/model/ParseResult.java
+/home/ivan/Escritorio/APE 10/backend/src/main/java/com/ape10/cfg/model/TreeNode.java
+/home/ivan/Escritorio/APE 10/backend/target/generated-sources/cup/com/ape10/cfg/parser/sym.java
